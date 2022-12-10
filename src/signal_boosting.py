@@ -1,10 +1,9 @@
 import json
 import random
 from datetime import datetime
+from random import randint, choice, shuffle
 from urllib.request import urlopen
 
-import requests
-from random import randint, choice, shuffle
 from faker import Faker
 
 connection_bc = urlopen(
@@ -16,18 +15,20 @@ def breast_cancer():
     breast_cancer_array = []
 
     for i in relevantDocument_bc['response']['docs']:
-        query = i['brief_title']
-        condition = i['condition']
+        query = str(i['brief_title']).lower().replace("\'", "").replace("\'", "").strip()
+        condition = str(i['condition']).lower().replace("\'", "").replace("\'", "").strip()
         target = i['id']
+        type = random.choice(["click", ""])
         weight = random.randint(1, 4)
         timestamp = datetime.now()
     breast_cancer_array.append(
-        str('["query":"{}" , "timestamp":"{}", "condition":"{}" , "type":"click" , "weight":"{}", "target":"{}"]').format(
+        str('["query":"{}","timestamp":"{}","condition":"{}","type":"click","weight":"{}","target":"{}"]').format(
             query,
             timestamp,
             condition,
+            type,
             weight, target))
-    return relevantDocument_bc
+    return breast_cancer_array
 
 
 def breast_cancer_id():
@@ -36,7 +37,7 @@ def breast_cancer_id():
         tuple_relevantDocument_bc.append(i['id'])
         tuple_relevantDocument_bc.sort()
     print(tuple_relevantDocument_bc)
-    return relevantDocument_bc
+    return tuple_relevantDocument_bc
 
 
 connection_pc = urlopen(
@@ -47,18 +48,20 @@ relevantDocument_pc = json.load(connection_pc)
 def prostate_cancer():
     prostate_cancer_array = []
     for i in relevantDocument_pc['response']['docs']:
-        query = i['brief_title']
-        condition = i['condition']
-        target = i['id']
-        weight = random.randint(1, 4)
+        query = str(i['brief_title']).lower().replace("\'", "").replace("\'", "").strip()
         timestamp = datetime.now()
+        condition = str(i['condition']).lower().replace("\'", "").replace("\'", "").strip()
+        type = random.choice(["click", ""])
+        weight = random.randint(1, 4)
+        target = i['id']
     prostate_cancer_array.append(
-        str('["query":"{}" , "timestamp":"{}", "condition":"{}" , "type":"click" , "weight":"{}", "target":"{}"]').format(
+        str('["query":"{}","timestamp":"{}","condition":"{}","type":"click","weight":"{}","target":"{}"]').format(
             query,
             timestamp,
             condition,
+            type,
             weight, target))
-    return relevantDocument_pc
+    return prostate_cancer_array
 
 
 def prostate_cancer_id():
@@ -68,7 +71,7 @@ def prostate_cancer_id():
         print(i['id'])
         tuple_relevantDocument_pc.sort()
     print(tuple_relevantDocument_pc)
-    return relevantDocument_pc
+    return tuple_relevantDocument_pc
 
 
 connection_lc = urlopen(
@@ -79,18 +82,21 @@ relevantDocument_lc = json.load(connection_lc)
 def lung_cancer():
     lung_cancer_array = []
     for i in relevantDocument_lc['response']['docs']:
-        query = i['brief_title']
-        condition = i['condition']
+        query = str(i['brief_title']).lower().replace("\'", "").replace("\'", "").strip()
+        condition = str(i['condition']).lower().replace("\'", "").replace("\'", "").strip()
         target = i['id']
+        type = random.choice(["click", ""])
         weight = random.randint(1, 4)
         timestamp = datetime.now()
     lung_cancer_array.append(
-        str('["query":"{}" , "timestamp":"{}", "condition":"{}" , "type":"click" , "weight":"{}", "target":"{}"]').format(
+        str('["query":"{}","timestamp":"{}","condition":"{}","type":"click","weight":"{}","target":"{}"]').format(
             query,
             timestamp,
             condition,
+            type,
             weight, target))
-    return relevantDocument_lc
+    return lung_cancer_array
+
 
 def lung_cancer_id():
     tuple_relevantDocument_lc = []
@@ -98,27 +104,32 @@ def lung_cancer_id():
         tuple_relevantDocument_lc.append(i['id'])
         tuple_relevantDocument_lc.sort()
     print(tuple_relevantDocument_lc)
-    return relevantDocument_lc
+    return tuple_relevantDocument_lc
+
 
 connection_oc = urlopen(
     "http://localhost:8983/solr/med_studies/select?defType=lucene&facet.contains=ovarian%20cancer&facet.field=official_title&facet.sort=count&facet=true&indent=true&q.op=OR&q=brief_title%3Aovarian%20cancer")
 relevantDocument_oc = json.load(connection_oc)
 
+
 def ovarian_cancer():
     ovarian_cancer_array = []
     for i in relevantDocument_oc['response']['docs']:
-        query = i['brief_title']
-        condition = i['condition']
+        query = str(i['brief_title']).lower().replace("\'", "").replace("\'", "").strip()
+        condition = str(i['condition']).lower().replace("\'", "").replace("\'", "").strip()
+        type = random.choice(["click", ""])
         target = i['id']
         weight = random.randint(1, 4)
         timestamp = datetime.now()
     ovarian_cancer_array.append(
-        str('["query":"{}" , "timestamp":"{}", "condition":"{}" , "type":"click" , "weight":"{}", "target":"{}"]').format(
+        str('["query":"{}","timestamp":"{}","condition":"{}","type":"click","weight":"{}","target":"{}"]').format(
             query,
             timestamp,
             condition,
+            type,
             weight, target))
-    return relevantDocument_oc
+    return ovarian_cancer_array
+
 
 def ovarian_cancer_id():
     tuple_relevantDocument_oc = []
@@ -126,7 +137,8 @@ def ovarian_cancer_id():
         tuple_relevantDocument_oc.append(i['id'])
         tuple_relevantDocument_oc.sort()
     print(tuple_relevantDocument_oc)
-    return relevantDocument_oc
+    return tuple_relevantDocument_oc
+
 
 breast_cancer = breast_cancer()
 breast_cancer_id = breast_cancer_id()
@@ -144,6 +156,14 @@ print(ovarian_cancer)
 print(lung_cancer)
 print(prostate_cancer)
 print(breast_cancer)
+with open(f'signal_breast_cancer.json', 'w') as f:
+    json.dump(breast_cancer, f)
+
+with open(f'signal_lung_cancer.json', 'w') as f:
+    json.dump(lung_cancer, f)
+
+with open(f'signal_prostate_cancer.json', 'w') as f:
+    json.dump(prostate_cancer, f)
 
 with open(f'signal_ovarian_cancer.json', 'w') as f:
     json.dump(ovarian_cancer, f)
