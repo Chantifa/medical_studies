@@ -3,13 +3,11 @@ import random
 from datetime import datetime
 from random import randint, choice, shuffle
 from urllib.request import urlopen
-
 from faker import Faker
 
 connection_bc = urlopen(
     "http://localhost:8983/solr/med_studies/select?defType=lucene&facet.contains=cancer&facet.field=official_title&facet.sort=count&facet=true&indent=true&q.op=OR&q=brief_title%3Abreast%20cancer&wt=json")
 relevantDocument_bc = json.load(connection_bc)
-
 
 def breast_cancer():
     breast_cancer_array = []
@@ -30,7 +28,6 @@ def breast_cancer():
             weight, target))
     return breast_cancer_array
 
-
 def breast_cancer_id():
     tuple_relevantDocument_bc = []
     for i in relevantDocument_bc['response']['docs']:
@@ -38,11 +35,9 @@ def breast_cancer_id():
         tuple_relevantDocument_bc.sort()
     return tuple_relevantDocument_bc
 
-
 connection_pc = urlopen(
     "http://localhost:8983/solr/med_studies/select?defType=lucene&facet.contains=prostate%20cancer&facet.field=official_title&facet.sort=count&facet=true&indent=true&q.op=OR&q=brief_title%3Aprostate%20cancer")
 relevantDocument_pc = json.load(connection_pc)
-
 
 def prostate_cancer():
     prostate_cancer_array = []
@@ -62,7 +57,6 @@ def prostate_cancer():
             weight, target))
     return prostate_cancer_array
 
-
 def prostate_cancer_id():
     tuple_relevantDocument_pc = []
     for i in relevantDocument_pc['response']['docs']:
@@ -70,11 +64,9 @@ def prostate_cancer_id():
         tuple_relevantDocument_pc.sort()
     return tuple_relevantDocument_pc
 
-
 connection_lc = urlopen(
     "http://localhost:8983/solr/med_studies/select?defType=lucene&facet.contains=lung%20cancer&facet.field=official_title&facet.sort=count&facet=true&indent=true&q.op=OR&q=brief_title%3Alung%20cancer")
 relevantDocument_lc = json.load(connection_lc)
-
 
 def lung_cancer():
     lung_cancer_array = []
@@ -94,7 +86,6 @@ def lung_cancer():
             weight, target))
     return lung_cancer_array
 
-
 def lung_cancer_id():
     tuple_relevantDocument_lc = []
     for i in relevantDocument_lc['response']['docs']:
@@ -102,11 +93,9 @@ def lung_cancer_id():
         tuple_relevantDocument_lc.sort()
     return tuple_relevantDocument_lc
 
-
 connection_oc = urlopen(
     "http://localhost:8983/solr/med_studies/select?defType=lucene&facet.contains=ovarian%20cancer&facet.field=official_title&facet.sort=count&facet=true&indent=true&q.op=OR&q=brief_title%3Aovarian%20cancer")
 relevantDocument_oc = json.load(connection_oc)
-
 
 def ovarian_cancer():
     ovarian_cancer_array = []

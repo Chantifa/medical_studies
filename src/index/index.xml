@@ -1,0 +1,31 @@
+<add>
+    <doc>
+        <field name='clinical_study'> </field>
+        <field name='required_header'> </field>
+        <field name='download_date'>    </field>
+        <field name='link_text'>.</field>
+        <field name='url'></field>
+        <field name='id_info'> </field>
+        <field name='org_study_id'> </field>
+        <field name='nct_id'></field>
+        <field name='brief_title'></field>
+        <field name='sponsors'></field>
+        <field name='lead_sponsor'></field>
+        <field name='agency'></field>
+        <field name='agency_class'></field>
+        <field name='source'></field>
+        <field name='brief_summary'> </field>
+        <field name='textblock'></field>
+        <field name='overall_status'></field>
+        <field name='start_date'></field>
+        <field name='completion_date'></field>
+        <field name='study_type'> </field>
+        <field name='has_expanded_access'> </field>
+        <field name='condition'> </field>
+        <field name='eligibility'></field>
+        <field name='criteria'> </field>
+        <field name='gender'> </field>
+        <field name='minimum_age'></field>
+        <field name='maximum_age'></field>
+    </doc>
+</add>
