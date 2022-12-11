@@ -36,7 +36,6 @@ def breast_cancer_id():
     for i in relevantDocument_bc['response']['docs']:
         tuple_relevantDocument_bc.append(i['id'])
         tuple_relevantDocument_bc.sort()
-    print(tuple_relevantDocument_bc)
     return tuple_relevantDocument_bc
 
 
@@ -68,9 +67,7 @@ def prostate_cancer_id():
     tuple_relevantDocument_pc = []
     for i in relevantDocument_pc['response']['docs']:
         tuple_relevantDocument_pc.append(i['id'])
-        print(i['id'])
         tuple_relevantDocument_pc.sort()
-    print(tuple_relevantDocument_pc)
     return tuple_relevantDocument_pc
 
 
@@ -103,7 +100,6 @@ def lung_cancer_id():
     for i in relevantDocument_lc['response']['docs']:
         tuple_relevantDocument_lc.append(i['id'])
         tuple_relevantDocument_lc.sort()
-    print(tuple_relevantDocument_lc)
     return tuple_relevantDocument_lc
 
 
@@ -136,7 +132,6 @@ def ovarian_cancer_id():
     for i in relevantDocument_oc['response']['docs']:
         tuple_relevantDocument_oc.append(i['id'])
         tuple_relevantDocument_oc.sort()
-    print(tuple_relevantDocument_oc)
     return tuple_relevantDocument_oc
 
 
@@ -152,10 +147,6 @@ lung_cancer_id = lung_cancer_id()
 ovarian_cancer = ovarian_cancer()
 ovarian_cancer_id = ovarian_cancer_id()
 
-print(ovarian_cancer)
-print(lung_cancer)
-print(prostate_cancer)
-print(breast_cancer)
 with open(f'signal_breast_cancer.json', 'w') as f:
     json.dump(breast_cancer, f)
 
@@ -243,3 +234,18 @@ print(signals)
 
 with open(f'signals.json', 'w') as f:
     json.dump(signals, f)
+
+"""
+connection_bc = urlopen(
+    "http://localhost:8983/solr/med_studies/select?defType=lucene&facet.contains=cancer&facet.field=official_title&facet.sort=count&facet=true&indent=true&q.op=OR&q=brief_title%3Abreast%20cancer&wt=json")
+relevantDocument_c = json.load(connection_bc)
+for i in relevantDocument_c['response']['docs']:
+    query = str(i['brief_title']).lower().replace("\'", "").replace("\'", "").strip()
+    condition = str(i['condition']).lower().replace("\'", "").replace("\'", "").strip()
+    target = i['id']
+    with open(f'signals.json', 'w') as f:
+    json.dump(signals, f)
+    with open(f'signal_breast_cancer.json) as f:
+    json.dump(
+
+"""

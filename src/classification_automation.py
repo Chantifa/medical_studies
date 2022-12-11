@@ -5,26 +5,27 @@ from urllib.request import urlopen
 import matplotlib.pyplot as pyplot
 import numpy as numpy
 import pandas as pd
-
+"""
 # erstellen einer Tabelle von json signals to pandas
 connection_lc = urlopen(
-    "http://localhost:8983/solr/med_studies/select?defType=lucene&facet.contains=cancer&facet.field=condition&facet.sort=index&facet=true&indent=true&q.op=OR&q=brief_title%3Acancer&wt=csv")
+    "http://localhost:8983/solr/med_studies/select?defType=lucene&facet.contains=cancer&facet.field=condition&facet.sort=count&facet=true&indent=true&q.op=OR&q=brief_title%3Acancer&wt=json")
 relevantDocument_lc = csv.reader(connection_lc)
 
 print(relevantDocument_lc.__getattribute__())
+"""
 
-
-def catogerization():
+word = 'breast cancer'
+def catogerization(word):
     connection_cat = urlopen(
-        "http://localhost:8983/solr/med_studies/select?defType=lucene&facet.contains=cancer&facet.field=condition&facet.sort=index&facet=true&indent=true&q.op=OR&q=brief_title%3Acancer&wt=json")
+        "http://localhost:8983/solr/med_studies/select?defType=lucene&facet.contains=cancer&facet.field=condition&facet.sort=count&facet=true&indent=true&q.op=OR&q=brief_title%3Acancer&wt=json")
     relevantDocument_cat = json.load(connection_cat)
     classLabelVector = []  # Hier werden die tatsächlichen Kategorien vermerkt
     classColorVector = []  # Hier werden die Kategorien über Farben vermerkt (zur späteren Unterscheidung im 3D-Plot!)
     index = 0
     for i in relevantDocument_cat['response']['docs']:
-        if str(i['condition']).lower().strip() == 'breast cancer':
+        if word == str(i['condition']).lower().strip().__contains__('cancer'):
             color = 'yellow'
-        elif str(i['condition']).lower().strip() == "prostate cancer":
+        elif word == str(i['condition']).lower().strip().__contains__('precancerous'):
             color = 'red'
         else:
             color = 'blue'
