@@ -19,7 +19,7 @@ seq_len_premise = [len(i.split()) for i in relevantDocument_bc['doc']]
 for i in relevantDocument_bc['response']['doc']:
     i.split
 pd.Series(seq_len_premise).hist(bins = 25)
-sns.countplot(context['context'])
+sns.countplot(i['context'])
 # Obtain a 10% test set from train set
 X_train_Transformer, X_val_Transformer, y_train_Transformer, y_val_Transformer = train_test_split(
                                                     x_train, y_train, test_size=0.20, random_state=42)

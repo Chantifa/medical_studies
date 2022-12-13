@@ -5,16 +5,24 @@ from urllib.request import urlopen
 import matplotlib.pyplot as pyplot
 import numpy as numpy
 import pandas as pd
-"""
+import spacy
+nlp = spacy.load("en_core_web_sm")
+
+condition_list = []
+token1_text = []
+token1_dep = []
 # erstellen einer Tabelle von json signals to pandas
-connection_lc = urlopen(
-    "http://localhost:8983/solr/med_studies/select?defType=lucene&facet.contains=cancer&facet.field=condition&facet.sort=count&facet=true&indent=true&q.op=OR&q=brief_title%3Acancer&wt=json")
-relevantDocument_lc = csv.reader(connection_lc)
+connection_lc = urlopen("http://localhost:8983/solr/med_studies/select?defType=lucene&facet.contains=cancer&facet.field=condition&facet.sort=count&facet=true&indent=true&q.op=OR&q=brief_title%3Acancer&wt=json")
+condition = str(connection_lc['conditions'])
+condition_list.append(condition)
+doc = nlp(condition)
+for tok in doc:
+    token1_text.append(tok.text)
+    token1_dep.append(tok.dep_)
+df = pd.DataFrame(condition_list)
+print(df)
 
-print(relevantDocument_lc.__getattribute__())
-"""
-
-word = 'breast cancer'
+nlp = spacy.load("en_core_web_sm")
 def catogerization(word):
     connection_cat = urlopen(
         "http://localhost:8983/solr/med_studies/select?defType=lucene&facet.contains=cancer&facet.field=condition&facet.sort=count&facet=true&indent=true&q.op=OR&q=brief_title%3Acancer&wt=json")
@@ -37,13 +45,6 @@ def catogerization(word):
 
     return index, classLabelVector, classColorVector
 
-print(catogerization())
-
-
-"""
-json_signal = pd.read_json('signals.json', orient='records')
-
-print(json_signal)
 
 
 def readDataSet(filename):
@@ -77,8 +78,8 @@ def readDataSet(filename):
             else:
                 color = 'blue'
 
-            classLabelVector.append(classLabel)  # Kategorie (Haus, Wohnung, Büro) als Text-Label speichern
-            classColorVector.append(color)  # Kategorie als Farbe speichern (Büro = gelb, Wohnung = rot, Haus = Blau)
+            classLabelVector.append(classLabel)  # Kategorie  als Text-Label speichern
+            classColorVector.append(color)  # Kategorie als Farbe speichern
 
         index += 1
 
@@ -202,4 +203,3 @@ for i in range(0, numTestVectors):  # Aufruf des Klassifikators von 0 bis 29
     if (result != classLabelVector[i]):
         errorCount += 1.0
 print("Error Count: %d" % errorCount)
-"""

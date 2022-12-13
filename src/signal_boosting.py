@@ -4,10 +4,12 @@ from datetime import datetime
 from random import randint, choice, shuffle
 from urllib.request import urlopen
 from faker import Faker
+import pandas as pd
 
 connection_bc = urlopen(
     "http://localhost:8983/solr/med_studies/select?defType=lucene&facet.contains=cancer&facet.field=official_title&facet.sort=count&facet=true&indent=true&q.op=OR&q=brief_title%3Abreast%20cancer&wt=json")
 relevantDocument_bc = json.load(connection_bc)
+
 
 def breast_cancer():
     breast_cancer_array = []
