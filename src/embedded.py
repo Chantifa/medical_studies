@@ -1,25 +1,18 @@
-import json
-from urllib.request import urlopen
+import nlu
+import os
+import findspark as fs
+fs.init()
 
-import sns as sns
-from pandas.io.common import urlopen
-from transformers import AutoTokenizer, AutoModel
-import pandas as pd
-tokenizer = AutoTokenizer.from_pretrained("emilyalsentzer/Bio_ClinicalBERT")
-model = AutoModel.from_pretrained("emilyalsentzer/Bio_ClinicalBERT")
+os.environ["JAVA_HOME"] = "C:/'Program Files'/Java/jdk-19"
+os.environ["PATH"] = os.environ["JAVA_HOME"] + "/bin:" + os.environ["PATH"]
+os.environ['HADOOP_HOME'] = "C:/winutils"
+import os
+os.environ['PYSPARK_SUBMIT_ARGS'] = "--master mymaster --total-executor 2 --conf" \
+                                    " spark.driver.extraJavaOptions=-Dhttp.proxyHost=proxy.mycorp.com-Dhttp.proxyPort=1234 -Dhttp.nonProxyHosts=localhost|.mycorp.com|127.0.0.1 -Dhttps.proxyHost=proxy.mycorp.com -Dhttps.proxyPort=1234 -Dhttps.nonProxyHosts=localhost|.mycorp.com|127.0.0.1 pyspark-shell"
 
-word = "breast cancer"
+def embedding(query):
+    embeddings_df = nlu.load('en.embed_sentence.bert_base_uncased').predict(query, output_level='sentence')
+    return embeddings_df
 
-connection_bc = urlopen(
-    "http://localhost:8983/solr/med_studies/select?defType=lucene&facet.contains=cancer&facet.field=official_title&facet.sort=count&facet=true&indent=true&q.op=OR&q=brief_title%3Abreast%20cancer&wt=json")
-relevantDocument_bc = json.load(connection_bc)
 
-seq_len_premise = [len(i.split()) for i in relevantDocument_bc['doc']]
-
-for i in relevantDocument_bc['response']['doc']:
-    i.split
-pd.Series(seq_len_premise).hist(bins = 25)
-sns.countplot(i['context'])
-# Obtain a 10% test set from train set
-X_train_Transformer, X_val_Transformer, y_train_Transformer, y_val_Transformer = train_test_split(
-                                                    x_train, y_train, test_size=0.20, random_state=42)
+print(embedding("breast cancer"))

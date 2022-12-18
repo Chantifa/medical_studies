@@ -1,96 +1,80 @@
-import csv
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, AutoModel, Pipeline
+import torch
 import json
 from urllib.request import urlopen
 
-import matplotlib.pyplot as pyplot
-import numpy as numpy
-import pandas as pd
-import spacy
-nlp = spacy.load("en_core_web_sm")
+
+def getClassification(query):
+    model = AutoModelForSequenceClassification.from_pretrained("tarasophia/Bio_ClinicalBERT_medical")
+    tokenizer = AutoTokenizer.from_pretrained("tarasophia/Bio_ClinicalBERT")
+    inputs = tokenizer(query, return_tensors="pt")
+    with torch.no_grad():
+        logits = model(**inputs).logits
+    predicted_class_id = logits.argmax().item()
+    model.config.id2label[predicted_class_id]
+    predicted_token_class_ids = logits.argmax(-1)
+    predicted_tokens_classes = [model.config.id2label[t.item()] for t in predicted_token_class_ids[0]]
+    return predicted_tokens_classes
+
 
 condition_list = []
 token1_text = []
 token1_dep = []
+
 # erstellen einer Tabelle von json signals to pandas
-connection_lc = urlopen("http://localhost:8983/solr/med_studies/select?defType=lucene&facet.contains=cancer&facet.field=condition&facet.sort=count&facet=true&indent=true&q.op=OR&q=brief_title%3Acancer&wt=json")
-condition = str(connection_lc['conditions'])
-condition_list.append(condition)
-doc = nlp(condition)
-for tok in doc:
-    token1_text.append(tok.text)
-    token1_dep.append(tok.dep_)
-df = pd.DataFrame(condition_list)
-print(df)
+connection = urlopen(
+    "http://localhost:8983/solr/med_studies/select?defType=lucene&facet.contains=cancer&facet.field=condition&facet.sort=count&facet=true&indent=true&q.op=OR&q=brief_title%3Acancer&wt=json")
+response = json.load(connection)
 
-nlp = spacy.load("en_core_web_sm")
-def catogerization(word):
-    connection_cat = urlopen(
-        "http://localhost:8983/solr/med_studies/select?defType=lucene&facet.contains=cancer&facet.field=condition&facet.sort=count&facet=true&indent=true&q.op=OR&q=brief_title%3Acancer&wt=json")
-    relevantDocument_cat = json.load(connection_cat)
-    classLabelVector = []  # Hier werden die tatsächlichen Kategorien vermerkt
-    classColorVector = []  # Hier werden die Kategorien über Farben vermerkt (zur späteren Unterscheidung im 3D-Plot!)
+colors = []
+
+
+# Building the category
+def get_cat(response):
+    for i in response['response']['docs']:
+        condition_list.append(i['condition'])
+    df = pd.DataFrame(condition_list)
+    print(df[0])
+    return df[0]
+
+df = get_cat(response)
+def cat_color(response, df):
+    condition_list = []
+    color = list(np.random.choice(range(256), size=3))
+    count = len(df['0'])+1
+    colors.append(color)
+    for i in response['response']['rows']:
+        count = count -1
+        if str(i['brief_title']).__contains__(str(df[count]).lower().strip()):
+            condition_list.append()
+
+
+
+def catogerization(response):
+    classLabelVector = []  # categories
+    classColorVector = []  # to visualize the cateogires
     index = 0
-    for i in relevantDocument_cat['response']['docs']:
-        if word == str(i['condition']).lower().strip().__contains__('cancer'):
-            color = 'yellow'
-        elif word == str(i['condition']).lower().strip().__contains__('precancerous'):
-            color = 'red'
-        else:
-            color = 'blue'
-        classLabelVector.append(
-            str(i['condition']).lower().strip())  # Kategorie (Haus, Wohnung, Büro) als Text-Label speichern
-        classColorVector.append(color)  # Kategorie als Farbe speichern (Büro = gelb, Wohnung = rot, Haus = Blau)
-
+    cat = get_cat(response)
+    list_lenght = len(cat[0])
+    returnMat = numpy.zeros(list_lenght - 1,4) # An Numpy-Matrix in high of the rowcount (minus collumn-count)
+    for i in response['response']['docs']:
+        if str(i['condition']).strip().lower().__contains__(str(cat[0].iterrows())):
+            returnMat[index - 1, :] = cat[1:5]
+            color = list(np.random.choice(range(256), size=3))
+            colors.append(color)
+            classLabelVector.append(str(i['condition'].lower().strip()))  # Kategorie als Text-Label speichern
+        classColorVector.append(colors)  # categories to save in colors (Cancer = yellow, HIV = red, House = Blue)
         index += 1
-
-    return index, classLabelVector, classColorVector
-
-
-
-def readDataSet(filename):
-    fr = open(filename)  # Datei-Stream vorbereiten
-
-    numberOfLines = len(fr.readlines())  # Anzahl der Zeilen ermitteln
-
-    returnMat = numpy.zeros((numberOfLines - 1,
-                             3))  # Eine Numpy-Matrix in Höhe der Zeilenanzahl (minus Kopfzeile) und in Breite der drei Merkmal-Spalten
-    classLabelVector = []  # Hier werden die tatsächlichen Kategorien vermerkt
-    classColorVector = []  # Hier werden die Kategorien über Farben vermerkt (zur späteren Unterscheidung im 3D-Plot!)
-
-    # print(returnMat)   # Ggf. mal die noch die ausge-null-te Matrix anzeigen lassen (bei Python 2.7: die Klammern weglassen!)
-
-    fr = open(filename)  # Datei-Stream öffnen
-    index = 0
-
-    for line in fr.readlines():  # Zeile für Zeile der Datei lesen
-        if index != 0:  # Kopfzeile überspringen
-            line = line.strip()
-            listFromLine = line.split('\t')  # Jede Zeile wird zur temporären Liste (Tabulator als Trennzeichen)
-
-            returnMat[index - 1, :] = listFromLine[1:4]  # Liste in die entsprechende Zeile der Matrix überführen
-
-            classLabel = listFromLine[4]  # Kategorie (Haus, Wohnung, Büro) für diese Zeile merken
-
-            if classLabel == "lung cancer":
-                color = 'yellow'
-            elif classLabel == "prostate cancer":
-                color = 'red'
-            else:
-                color = 'blue'
-
-            classLabelVector.append(classLabel)  # Kategorie  als Text-Label speichern
-            classColorVector.append(color)  # Kategorie als Farbe speichern
-
-        index += 1
-
+    print(classLabelVector)
+    print(classColorVector)
     return returnMat, classLabelVector, classColorVector
 
 
-index, classLabelVector, classColorVector = catogerization()
-
+dataset, classLabelVector, classColorVector = catogerization(get_cat(response))
+print(classColorVector)
 fig = pyplot.figure()
 ax = fig.add_subplot(111)
-ax.scatter(index[:, 0], index[:, 1], marker='o', color=classColorVector)
+ax.scatter(dataset[:, 0], dataset[:, 1], marker='o', color=classColorVector)
 ax.set_xlabel("count of docs")
 ax.set_ylabel("clicks")
 ax.set_xlim(xmin=0)
@@ -99,7 +83,7 @@ pyplot.show()
 
 fig = pyplot.figure()
 ax = fig.add_subplot(111)
-ax.scatter(index[:, 0], index[:, 2], marker='o', color=classColorVector)
+ax.scatter(dataset[:, 0], dataset[:, 2], marker='o', color=classColorVector)
 ax.set_xlabel("count of docs")
 ax.set_ylabel("IA_Ratio")
 ax.set_xlim(xmin=0)
@@ -108,7 +92,7 @@ pyplot.show()
 
 fig = pyplot.figure()
 ax = fig.add_subplot(111, projection='3d')
-ax.scatter(index[:, 0], index[:, 2], index[:, 1], marker='o', color=classColorVector)
+ax.scatter(dataset[:, 0], dataset[:, 2], dataset[:, 1], marker='o', color=classColorVector)
 ax.set_xlabel("count of docs")
 ax.set_ylabel("IA_Ratio")
 ax.set_zlabel("clicks")
@@ -117,50 +101,31 @@ ax.set_ylim(bottom=0)
 ax.set_zlim(bottom=0)
 pyplot.show()
 
+"""
 
-def normalizeDataSet(ind):
-    dataSet_n = numpy.zeros(numpy.shape(dataSet))  # [[ 0. 0. 0.]
-    # [ 0. 0. 0.]
-    # [ 0. 0. 0.]
-    # ...,
-    # [ 0. 0. 0.]
-    # [ 0. 0. 0.]
-    # [ 0. 0. 0.]]
+def normalizeDataSet(dataset):
+    dataSet_n = numpy.zeros(numpy.shape(dataset))  
 
-    minValues = dataSet.min(0)  # [ 10. 2.6 0.]
-    ranges = dataSet.max(0) - dataSet.min(0)  # [ 1775. 2.4 68.]
+    minValues = dataset.min(0) 
+    print(dataset.min)
+    ranges = dataset.max(0) - dataset(0) 
 
-    minValues = dataSet.min(0)  # [ 10. 2.6 0.]
-    maxValues = dataSet.max(0)  # [ 1785. 5. 68.]
+    minValues = dataset.min(0) 
+    maxValues = dataset.max(0)  
 
-    ranges = maxValues - minValues  # [ 1775. 2.4 68.]
+    ranges = maxValues - minValues  
 
-    rowCount = dataSet.shape[0]  # 1039
+    rowCount = dataset.shape[0] 
 
-    # numpy.tile() wiederholt Sequenzen (hier:  [[ 10. 2.6 0. ], ..., [ 10. 2.6 0. ]]
+    # numpy.tile() wiederholt Sequenzen 
 
-    dataSet_n = dataSet - numpy.tile(minValues, (rowCount, 1))  # [[ 2.56000000e+02 9.00000000e-01 1.80000000e+01]
-    # [ 6.60000000e+01 2.00000000e-01 5.40000000e+01]
-    # [ 3.32000000e+02 1.50000000e-01 1.00000000e+01]
-    # ...,
-    # [ 1.58000000e+02 6.00000000e-01 0.00000000e+00]
-    # [ 5.70000000e+01 1.00000000e-01 5.20000000e+01]
-    # [ 1.68000000e+02 2.00000000e-01 0.00000000e+00]]
+    dataSet_n = dataset - numpy.tile(minValues, (rowCount, 1))
 
-    dataSet_n = dataSet_n / numpy.tile(ranges, (rowCount, 1))  # [[ 0.14422535 0.375 0.26470588]
-    # [ 0.0371831 0.08333333 0.79411765]
-    # [ 0.18704225 0.0625 0.14705882]
-    # ...,
-    # [ 0.08901408 0.25 0.]
-    # [ 0.03211268 0.04166667 0.76470588]
-    # [ 0.09464789 0.08333333 0.]]
-
-    # print(dataSet_n)
-
-    return dataSet_n, ranges, minValues
+    dataSet_n = dataSet_n / numpy.tile(ranges, (rowCount, 1)) 
 
 
-dataSet_n, ranges, minValues = normalizeDataSet(dataSet)
+
+dataSet_n, ranges, minValues = normalizeDataSet(dataset)
 
 
 def classify(inX, dataSet, labels, k):
@@ -172,30 +137,22 @@ def classify(inX, dataSet, labels, k):
     distances = sqDistances ** 0.5  # Quadratwurzel über alle Werte
     sortedDistIndicies = distances.argsort()  # Aufsteigende Sortierung
     classCount = {}
-    # print("inX = %s, k = %s" % (inX, k))
-    # print(sortedDistIndicies)
+
     for i in range(k):  # Eingrenzung auf k-Werte in der sortierten Liste
         closest = labels[
             sortedDistIndicies[i]]  # Label (Kategorie [Büro, Wohnung, Haus] entsprechend der Sortierung aufnehmen
         classCount[closest] = classCount.get(closest, 0) + 1  # Aufbau eines Dictionary über die
         sortedClassCount = sorted(classCount, key=classCount.get, reverse=True)
-        # Absteigende Sortierung der gesammelten Labels in k-Reichweite
-    # wobei die Sortierung über den Count (Value) erfolgt
-    # print(classCount)
-    # print(sortedClassCount[0])
-    return sortedClassCount[0]  # Liefere das erste Label zurück also das Label mit der höchsten Anzahl innerhalb
-    # der k-Reichweite
-
+    return sortedClassCount[0]  
 
 errorCount = 0
 
-k = 5  # k-Eingrenzung (hier: auf 5 Nachbarn einschränken)
+k = 5  # k-limit 
 
 rowCount = dataSet_n.shape[0]  # Anzahl der Zeilen im gesamten Datensatz
 
-numTestVectors = 30  # Datensätze 0 - 29 werden zum testen von k verwendet,
-# die Datensätze ab Zeile 30 werden zur Klassifikation verwendet
-for i in range(0, numTestVectors):  # Aufruf des Klassifikators von 0 bis 29
+numTestVectors = 30 
+for i in range(0, numTestVectors):  
     result = classify(dataSet_n[i, :], dataSet_n[numTestVectors:rowCount, :], classLabelVector[numTestVectors:rowCount],
                       k)
     print("%s - the classifier came back with: %s, the real answer is: %s" % (i, result, classLabelVector[i]))
@@ -203,3 +160,4 @@ for i in range(0, numTestVectors):  # Aufruf des Klassifikators von 0 bis 29
     if (result != classLabelVector[i]):
         errorCount += 1.0
 print("Error Count: %d" % errorCount)
+"""

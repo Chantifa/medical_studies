@@ -4,16 +4,14 @@ from datetime import datetime
 from random import randint, choice, shuffle
 from urllib.request import urlopen
 from faker import Faker
-import pandas as pd
 
 connection_bc = urlopen(
-    "http://localhost:8983/solr/med_studies/select?defType=lucene&facet.contains=cancer&facet.field=official_title&facet.sort=count&facet=true&indent=true&q.op=OR&q=brief_title%3Abreast%20cancer&wt=json")
+    "http://localhost:8983/solr/med_studies/select?defType=lucene&facet.contains=breast%20cancer&facet.field=official_title&facet.sort=count&facet=true&indent=true&q.op=OR&q=brief_title%3Abreast%20cancer")
 relevantDocument_bc = json.load(connection_bc)
 
 
 def breast_cancer():
     breast_cancer_array = []
-
     for i in relevantDocument_bc['response']['docs']:
         query = str(i['brief_title']).lower().replace("\'", "").replace("\'", "").strip()
         condition = str(i['condition']).lower().replace("\'", "").replace("\'", "").strip()
@@ -22,19 +20,22 @@ def breast_cancer():
         weight = random.randint(1, 4)
         timestamp = datetime.now()
     breast_cancer_array.append(
-        str('["query":"{}","timestamp":"{}","condition":"{}","type":"click","weight":"{}","target":"{}"]').format(
+        str('["weight":"{}","query":"{}","timestamp":"{}","condition":"{}","type":"{}","target":"{}"]').format(
+            weight,
             query,
             timestamp,
             condition,
             type,
-            weight, target))
+            target))
+    breast_cancer_array.sort(reverse=True)
     return breast_cancer_array
 
 def breast_cancer_id():
     tuple_relevantDocument_bc = []
-    for i in relevantDocument_bc['response']['docs']:
-        tuple_relevantDocument_bc.append(i['id'])
-        tuple_relevantDocument_bc.sort()
+    for x in relevantDocument_bc['response']['docs']:
+        for i in breast_cancer:
+            if (i.__contains__("click") and i.__contains__(x['id'])):
+                tuple_relevantDocument_bc.append(x['id'])
     return tuple_relevantDocument_bc
 
 connection_pc = urlopen(
@@ -51,19 +52,22 @@ def prostate_cancer():
         weight = random.randint(1, 4)
         target = i['id']
     prostate_cancer_array.append(
-        str('["query":"{}","timestamp":"{}","condition":"{}","type":"click","weight":"{}","target":"{}"]').format(
+        str('["weight":"{}","query":"{}","timestamp":"{}","condition":"{}","type":"{}","target":"{}"]').format(
+            weight,
             query,
             timestamp,
             condition,
             type,
-            weight, target))
+            target))
+    prostate_cancer_array.sort(reverse=True)
     return prostate_cancer_array
 
 def prostate_cancer_id():
     tuple_relevantDocument_pc = []
-    for i in relevantDocument_pc['response']['docs']:
-        tuple_relevantDocument_pc.append(i['id'])
-        tuple_relevantDocument_pc.sort()
+    for x in relevantDocument_pc['response']['docs']:
+        for i in prostate_cancer:
+            if (i.__contains__("click") and i.__contains__(x['id'])):
+                tuple_relevantDocument_pc.append(x['id'])
     return tuple_relevantDocument_pc
 
 connection_lc = urlopen(
@@ -80,19 +84,22 @@ def lung_cancer():
         weight = random.randint(1, 4)
         timestamp = datetime.now()
     lung_cancer_array.append(
-        str('["query":"{}","timestamp":"{}","condition":"{}","type":"click","weight":"{}","target":"{}"]').format(
+        str('["weight":"{}","query":"{}","timestamp":"{}","condition":"{}","type":"{}","target":"{}"]').format(
+            weight,
             query,
             timestamp,
             condition,
             type,
-            weight, target))
+            target))
+    lung_cancer_array.sort(reverse=True)
     return lung_cancer_array
 
 def lung_cancer_id():
     tuple_relevantDocument_lc = []
-    for i in relevantDocument_lc['response']['docs']:
-        tuple_relevantDocument_lc.append(i['id'])
-        tuple_relevantDocument_lc.sort()
+    for x in relevantDocument_lc['response']['docs']:
+        for i in lung_cancer:
+            if (i.__contains__("click") and i.__contains__(x['id'])):
+                tuple_relevantDocument_lc.append(x['id'])
     return tuple_relevantDocument_lc
 
 connection_oc = urlopen(
@@ -105,24 +112,28 @@ def ovarian_cancer():
         query = str(i['brief_title']).lower().replace("\'", "").replace("\'", "").strip()
         condition = str(i['condition']).lower().replace("\'", "").replace("\'", "").strip()
         type = random.choice(["click", ""])
-        target = i['id']
         weight = random.randint(1, 4)
+        target = i['id']
         timestamp = datetime.now()
+
     ovarian_cancer_array.append(
-        str('["query":"{}","timestamp":"{}","condition":"{}","type":"click","weight":"{}","target":"{}"]').format(
+        str('["weight":"{}","query":"{}","timestamp":"{}","condition":"{}","type":"{}","target":"{}"]').format(
+            weight,
             query,
             timestamp,
             condition,
             type,
-            weight, target))
+            target))
+    ovarian_cancer_array.sort(reverse=True)
     return ovarian_cancer_array
 
 
 def ovarian_cancer_id():
     tuple_relevantDocument_oc = []
-    for i in relevantDocument_oc['response']['docs']:
-        tuple_relevantDocument_oc.append(i['id'])
-        tuple_relevantDocument_oc.sort()
+    for x in relevantDocument_oc['response']['docs']:
+        for i in ovarian_cancer:
+            if(i.__contains__("click") and i.__contains__(x['id'])):
+                tuple_relevantDocument_oc.append(x['id'])
     return tuple_relevantDocument_oc
 
 
@@ -221,7 +232,6 @@ for query in queries:
         signals.append(signal)
 
 shuffle(signals)
-print(signals)
 
 with open(f'signals.json', 'w') as f:
     json.dump(signals, f)
